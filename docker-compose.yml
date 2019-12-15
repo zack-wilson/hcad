@@ -1,0 +1,8 @@
+version: "3.7"
+
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    command: python -m hcad.etl.core "Real_acct_owner.zip"
