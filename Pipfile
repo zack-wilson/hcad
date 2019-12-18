@@ -9,6 +9,8 @@ pytest-cov = "*"
 pytest-xdist = "*"
 runtime-info = "*"
 tox = "*"
+radon = "*"
+bandit = "*"
 
 [packages]
 cachecontrol = {extras = ["filecache"],version = "*"}
@@ -18,6 +20,7 @@ pyspark = "*"
 python-dateutil = "*"
 requests = "*"
 tqdm = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.7"

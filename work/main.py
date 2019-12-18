@@ -12,10 +12,8 @@ from zipfile import ZipFile
 
 import requests
 import time
-# import pandas as pd
 from pyspark.sql import SparkSession
-
-# from pyspark.sql.functions import *
+from pyspark.util import Py4JJavaError
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -27,12 +25,6 @@ REMOTE = Path("data/cama/")
 LANDING = Path("samples/landing/")
 STAGING = Path("samples/staging/")
 RELEASE = Path("samples/release/")
-
-spark = (
-    SparkSession.builder.appName("Etl")
-        .config("spark.sql.warehouse.dir", STAGING.joinpath("spark-warehouse").as_posix())
-        .getOrCreate()
-)
 
 
 def dictionary(table: str) -> Tuple[str, ...]:
@@ -52,11 +44,23 @@ def dictionary(table: str) -> Tuple[str, ...]:
     )
 
 
-def land(archive: str, tax_year: str = TAX_YEAR, landing: Path = LANDING) -> None:
+def land(
+        archive: str,
+        tax_year: str = TAX_YEAR,
+        landing: Path = LANDING,
+        rel_tol: float = 1.6,
+) -> None:
+    spark = (
+        SparkSession.builder.appName(f"Landing_{tax_year}")
+            .config(
+            "spark.sql.warehouse.dir", STAGING.joinpath("spark-warehouse").as_posix()
+        )
+            .getOrCreate()
+    )
     source = urljoin(DOMAIN, (REMOTE / tax_year / archive).as_posix())
     target = landing / tax_year / archive.rstrip(".zip")
     if not target.exists():
-        log.info("Downloading %s" % source)
+        log.info("Bagging %s" % source)
         response = requests.get(source)
         try:
             target.mkdir(parents=True)
@@ -64,28 +68,32 @@ def land(archive: str, tax_year: str = TAX_YEAR, landing: Path = LANDING) -> Non
             pass
         target.joinpath(archive).write_bytes(response.content)
     with ZipFile(target.joinpath(archive)) as zf:
-        log.info("Unpacking %s", zf)
+        log.info("Unwrapping %s", zf)
         zf.extractall(target / "raw")
     for raw in target.joinpath("raw").rglob("*.txt"):
-        log.info("Mixing %s", raw)
-        with raw.open(encoding="iso-8859-1", newline="") as fin:
-            field_names = tuple(i[1] for i in dictionary(raw.stem))
-            log.info("Mixing %s", fin)
-            reader = csv.DictReader(
-                fin, fieldnames=tuple(field_names), dialect="excel-tab"
-            )
-            with raw.with_suffix(".csv").open(mode="w+", newline="") as fout:
-                log.info("Prepped %s", fout)
-                writer = csv.DictWriter(fout, fieldnames=field_names)
-                writer.writeheader()
-                writer.writerows(reader)
-        raw.unlink()
-    for cooked in target.joinpath("raw").rglob("*.csv"):
-        log.info("Adding sprinkles %s", cooked)
-        dst = target / cooked.name.replace(".csv", ".parquet")
-        dd = dictionary(cooked.stem)
+        if not raw.parent.with_suffix(".parquet").exists():
+            with raw.open(encoding="iso-8859-1", newline="") as fin:
+                field_names = tuple(i[1] for i in dictionary(raw.stem))
+                log.info("Mixing %s + %s", field_names, fin)
+                reader = csv.DictReader(
+                    fin, fieldnames=tuple(field_names), dialect="excel-tab"
+                )
+                try:
+                    with raw.with_suffix(".csv").open(mode="w+", newline="") as fout:
+                        writer = csv.DictWriter(fout, fieldnames=field_names)
+                        writer.writeheader()
+                        writer.writerows(reader)
+                        log.info("Baked %s", fout)
+                except csv.Error as csv_error:
+                    log.error(csv_error)
+                    log.info("Trashed %s", writer)
+            raw.unlink()
+    for prepped in target.joinpath("raw").rglob("*.csv"):
+        log.info("Adding sprinkles %s", prepped)
+        dst = target / prepped.name.replace(".csv", ".parquet")
+        dd = dictionary(prepped.stem)
         max_columns = len(dd)
-        max_chars_per_column = max(int(i[-1]) for i in dd)
+        max_chars_per_column = int(round(max(int(i[-1]) * rel_tol for i in dd)))
         log.info(
             json.dumps(
                 {
@@ -97,27 +105,30 @@ def land(archive: str, tax_year: str = TAX_YEAR, landing: Path = LANDING) -> Non
                 indent="    ",
             )
         )
-        df = spark.read.csv(
-            os.path.realpath(cooked),
-            header=True,
-            dateFormat="MM/dd/yyyy",
-            maxColumns=max_columns,
-            # maxCharsPerColumn=max_chars_per_column,
-        )
-        df.explain()
-        df.printSchema()
-        df.show()
-        time.sleep(3)
-        df.write.mode("overwrite").parquet(os.path.realpath(dst))
-        cooked.unlink()
-    target.joinpath("raw").rmdir()
+        try:
+            df = spark.read.csv(
+                os.path.realpath(prepped),
+                header=True,
+                dateFormat="MM/dd/yyyy",
+                maxColumns=max_columns,
+                maxCharsPerColumn=max_chars_per_column,
+            )
+            df.explain()
+            df.printSchema()
+            df.show()
+            time.sleep(3)
+            df.write.mode("overwrite").parquet(os.path.realpath(dst))
+            prepped.unlink()
+        except Py4JJavaError as py4j_java_error:
+            log.error(py4j_java_error)
+            log.info("Trashing %s", prepped)
 
 
-def run(*archives, tax_year: str, debug: Optional[bool]):
+def run(*archives: str, tax_year: str, debug: Optional[bool] = False):
     if debug:
         log.setLevel(debug)
     for archive in archives:
-        land(archive, tax_year=tax_year)
+        land(archive=archive, tax_year=tax_year)
 
 
 def main():
