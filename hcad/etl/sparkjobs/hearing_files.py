@@ -30,5 +30,5 @@ for src in settings.RELEASE.rglob(
     #     ignoreLeadingWhiteSpace=True,
     #     ignoreTrailingWhiteSpace=True,
     # )
-    spark.sql(f"CREATE DATABASE {src.parent.stem}")
+    spark.sql(f"CREATE IF NOT EXISTS DATABASE {src.parent.stem}")
     df.write.saveAsTable()
