@@ -11,16 +11,17 @@ runtime-info = "*"
 tox = "*"
 radon = "*"
 bandit = "*"
+pylint = "*"
+autopep8 = "*"
 
 [packages]
 cachecontrol = {extras = ["filecache"],version = "*"}
 click = "*"
-pandas = "*"
 pyspark = "*"
 python-dateutil = "*"
 requests = "*"
 tqdm = "*"
-pylint = "*"
+requests-html = "*"
 
 [requires]
 python_version = "3.7"

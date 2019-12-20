@@ -8,3 +8,9 @@ class TestServices(unittest.TestCase):
     def test_http(self):
         result = services.http.head("https://www.example.com")
         self.assertTrue(result)
+
+
+class TestJobsLand(unittest.TestCase):
+    def test_run(self):
+        result = land.run()
+        self.assertTrue(result)

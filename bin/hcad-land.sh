@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
-TAX_YEAR=${1:-$(date +"%Y")}
-DATABASE="data/hcad/"
-LANDING="$DATABASE/landing/"
-STAGING="$DATABASE/staging/"
+CURRENT_YEAR=$(date +"%Y")
+TAX_YEAR=${1:-$CURRENT_YEAR}
+DATABASE="data/hcad"
+DESC="$DATABASE/Desc/$TAX_YEAR"
+LANDING="$DATABASE/landing"
 
-mkdir -p logs
-mkdir -p "$DATABASE/Desc"
-mkdir -p "$LANDING"
-mkdir -p "$STAGING/$TAX_YEAR/csv"
+if [[ "$TAX_YEAR" == "$CURRENT_YEAR" ]]; then
+    URL="https://pdata.hcad.org/download/"
+else
+    URL="https://pdata.hcad.org/download/${TAX_YEAR}.html"
+fi
 
-wget --recursive --no-parent --continue --random-wait \
+echo "Downloading $TAX_YEAR Property Tax Data."
+mkdir -p {"logs","$DESC","$LANDING"}
+wget --recursive --continue --random-wait \
     -D "pdata.hcad.org" \
     -P "$LANDING" \
     --accept "txt,zip" \
     --reject "Access.zip" \
     --reject-regex ".*/GIS/.*" \
-    "https://pdata.hcad.org/index.html"
+    "$URL"
 
-find "$LANDING" -name "*.txt" -exec cp -v {} "$DATABASE/Desc" \;
-find "$LANDING" -path "**/$TAX_YEAR/*" -name "*.zip" -type f -exec unzip -ua -d "$STAGING/$TAX_YEAR/raw" {} \;
-find "$STAGING" -name "*.txt" -type f
-touch "$LANDING/_SUCCESS"
+find "$LANDING" -path "**/${TAX_YEAR}/*" -o -path "**/Desc/*" -name "*.txt"  -exec cp {} "$DESC" \;
+touch {"$DESC/_SUCCESS","$LANDING/_SUCCESS"}
