@@ -1,17 +1,14 @@
 import argparse
 import csv
 import io
-import json
 import logging
 import os
 import re
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from datetime import datetime as dt
 from pathlib import Path
-from typing import (Any, Dict, Generator, Iterator, Optional, Sequence, TextIO,
-                    Tuple, Union)
-from urllib.parse import urljoin, urlsplit
-from zipfile import ZipFile, ZipInfo
+from typing import Sequence
+from zipfile import ZipFile
 
 from ..settings import DATABASE, LANDING, STAGING
 
@@ -21,7 +18,28 @@ logging_format = "%(asctime)s:%(name)s:%(funcName)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=logging_format)
 
 
-def stage(*sources):
+def read_csv(file, fieldnames: Sequence[str], dialect: str):
+    reader = csv.DictReader(file, fieldnames=fieldnames, dialect=dialect)
+    try:
+        yield from reader
+    except csv.Error as csv_error:
+        log.error(csv_error)
+
+
+def write_csv(*rows: OrderedDict, dst: Path, fieldnames: Sequence[str]):
+    with dst.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        try:
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+                yield row
+            dst.with_name("_SUCCESS").touch(exist_ok=True)
+        except csv.Error as csv_error:
+            log.debug(csv_error)
+
+
+def stage(*sources: Path):
     for src in sources:
         log.info("Processing %s", src.name)
         with ZipFile(src) as zip_file:
@@ -43,7 +61,6 @@ def stage(*sources):
                         log.debug(field_names)
                         dst = (
                             STAGING.joinpath(src.parent.name)
-                            .joinpath("csv")
                             .joinpath(src.stem)
                             .joinpath(f.name)
                             .with_suffix(".csv")
@@ -56,7 +73,7 @@ def stage(*sources):
                             except FileExistsError:
                                 pass
                             log.info("Reading %s", f)
-                            reader = csv.DictReader(
+                            rows = read_csv(
                                 io.TextIOWrapper(
                                     f, encoding="iso-8859-1", newline=""
                                 ),
@@ -64,21 +81,7 @@ def stage(*sources):
                                 dialect="excel-tab",
                             )
                             log.info("Writing %s", dst)
-                            with dst.open(
-                                "w", newline="", encoding="utf-8"
-                            ) as f:
-                                writer = csv.DictWriter(
-                                    f, fieldnames=field_names
-                                )
-                                try:
-                                    writer.writeheader()
-                                    for row in reader:
-                                        writer.writerow(row)
-                                    dst.with_name("_SUCCESS").touch(
-                                        exist_ok=True
-                                    )
-                                except csv.Error as csv_error:
-                                    log.debug(csv_error)
+                            write_csv(*rows, dst=dst, fieldnames=field_names)
 
 
 def run(debug=False):
@@ -102,6 +105,13 @@ def run(debug=False):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument(
+        "--year",
+        choices=[*range(2005, dt.now().year + 1)],
+        default=dt.now().strftime("%Y"),
+        nargs="+",
+        type=str,
+    )
     args = parser.parse_args()
     run(debug=args.debug)
 
