@@ -4,7 +4,8 @@ ENV PYTHONUNBUFFERRED=1
 
 RUN apt-get update -y && apt-get install \
 	wget \
-	unzip
+	tar \
+	tree
 
 WORKDIR /usr/src/app
 COPY requirements.txt .

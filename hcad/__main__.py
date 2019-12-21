@@ -10,27 +10,28 @@ from pathlib import Path
 from typing import Generator, Iterator, Optional, Tuple
 from zipfile import ZipFile
 
-from pyspark.util import Py4JJavaError
+import hcad
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.utils import AnalysisException
-
-import hcad
+from pyspark.util import Py4JJavaError
 
 log = logging.getLogger(__name__)
 db = Path("data/hcad/")
-config = ConfigParser(dict(
-    tax_year=dt.now().strftime("%Y"),
-    landing=db.joinpath("landing").as_posix(),
-    staging=db.joinpath("staging").as_posix(),
-))
+config = ConfigParser(
+    dict(
+        tax_year=dt.now().strftime("%Y"),
+        landing=db.joinpath("landing").as_posix(),
+        staging=db.joinpath("staging").as_posix(),
+    )
+)
 
 dictionary = re.findall(
     r"(\w+)\s+(\w+)\s+(\d+)\s?",
     db.joinpath("Desc")
     .joinpath(config.defaults()["tax_year"])
     .joinpath("Layout_and_Length.txt")
-    .read_text()
+    .read_text(),
 )
 
 spark = SparkSession.builder.getOrCreate()
@@ -54,7 +55,11 @@ def land(year: Optional[str] = None) -> subprocess.CompletedProcess:
 
 
 def extract() -> Iterator[Path]:
-    for path in sorted(Path(config.defaults()["landing"]).rglob(f"**/{config.defaults()['tax_year']}/**/*.zip")):
+    for path in sorted(
+        Path(config.defaults()["landing"]).rglob(
+            f"**/{config.defaults()['tax_year']}/**/*.zip"
+        )
+    ):
         tmp = Path(tempfile.mkdtemp())
         print("Extracting %s to %s" % (path, tmp))
         with ZipFile(path) as zip_file:
@@ -99,7 +104,7 @@ def transform(*args: Path) -> DataFrame:
             log.error(py4J_java_error)
         except AnalysisException as analysis_exception:
             print("Transformation Failed.")
-            log.error(analysis_exception)
+            log.debug(analysis_exception)
 
 
 def load(*args: DataFrame) -> None:
@@ -107,7 +112,11 @@ def load(*args: DataFrame) -> None:
         f, df = arg
         log.info("Loading %s", df)
         dst = (
-            Path(config.defaults()["staging"]).joinpath(config.defaults()["tax_year"]).joinpath(f.parent.name).joinpath(f.name).with_suffix(".csv")
+            Path(config.defaults()["staging"])
+            .joinpath(config.defaults()["tax_year"])
+            .joinpath(f.parent.name)
+            .joinpath(f.name)
+            .with_suffix(".csv")
         )
         try:
             dst.mkdir(parents=True)
@@ -123,7 +132,7 @@ def load(*args: DataFrame) -> None:
             print("Load failed.")
             log.error(py4j_java_error)
         except AnalysisException as analysis_exception:
-            log.error(analysis_exception)
+            log.debug(analysis_exception)
 
         os.unlink(f)
 
@@ -157,11 +166,15 @@ def main():
     parser.add_argument(
         "year",
         type=int,
-        choices=[*range(2005, config.defaults()['tax_year'] + 1)],
+        choices=[*range(2005, int(config.defaults()["tax_year"]) + 1)],
         nargs="+",
     )
-    parser.add_argument("-l", "--landing", type=str, default=config.defaults()["landing"])
-    parser.add_argument("-s", "--staging", type=str, default=config.defaults()["staging"])
+    parser.add_argument(
+        "-l", "--landing", type=str, default=config.defaults()["landing"]
+    )
+    parser.add_argument(
+        "-s", "--staging", type=str, default=config.defaults()["staging"]
+    )
     args = parser.parse_args()
     run(
         *args.year,
