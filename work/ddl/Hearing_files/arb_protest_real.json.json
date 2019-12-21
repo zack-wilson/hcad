@@ -1,1 +1,0 @@
-{"fields":[{"metadata":{},"name":"acct","nullable":true,"type":"string"},{"metadata":{},"name":"protested_by","nullable":true,"type":"string"},{"metadata":{},"name":"protested_dt","nullable":true,"type":"date"}],"type":"struct"}

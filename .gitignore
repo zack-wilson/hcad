@@ -130,5 +130,6 @@ dmypy.json
 /.idea/
 
 data/
-/work/samples/**
-**/metastore_db/
+samples/**
+metastore_db/
+spark-warehouse/

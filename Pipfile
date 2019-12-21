@@ -13,11 +13,12 @@ radon = "*"
 bandit = "*"
 pylint = "*"
 autopep8 = "*"
+ipython = "*"
 
 [packages]
 cachecontrol = {extras = ["filecache"],version = "*"}
 click = "*"
-pyspark = "*"
+pyspark = {extras = ["sql"],version = "*"}
 python-dateutil = "*"
 requests = "*"
 tqdm = "*"
