@@ -11,6 +11,7 @@ from typing import Sequence
 from zipfile import ZipFile
 
 from ..settings import DATABASE, LANDING, STAGING
+from ..main import root_parser
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -103,8 +104,7 @@ def run(debug=False):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
+    parser = argparse.ArgumentParser(parents=[root_parser], add_help=False)
     parser.add_argument(
         "--year",
         choices=[*range(2005, dt.now().year + 1)],
