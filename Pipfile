@@ -16,13 +16,8 @@ autopep8 = "*"
 ipython = "*"
 
 [packages]
-cachecontrol = {extras = ["filecache"],version = "*"}
-click = "*"
-pyspark = {extras = ["sql"],version = "*"}
 python-dateutil = "*"
 requests = "*"
-tqdm = "*"
-requests-html = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,0 +1,12 @@
+version: "3.7"
+
+services:
+  jupyter:
+    image: jupyter/pyspark-notebook:latest
+    ports:
+      - 8888:8888 # jupyter
+      - 4040:4040 # pyspark
+    volumes:
+      - .:/home/jovyan/work
+    working_dir: /home/jovyan/work
+    command: jupyter lab
