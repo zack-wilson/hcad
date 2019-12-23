@@ -16,7 +16,6 @@ autopep8 = "*"
 ipython = "*"
 
 [packages]
-python-dateutil = "*"
 requests = "*"
 
 [requires]
