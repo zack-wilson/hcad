@@ -9,6 +9,7 @@ Extract, transform and load (save) Harris County Appraisal District public data 
 - Tiny
 - Secure
 - Ready for Kubernetes
+- Only 3rd party requirement is requests
 
 ## Install
 
