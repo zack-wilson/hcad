@@ -14,5 +14,5 @@ Extract, transform and load (save) Harris County Appraisal District public data 
 ## Install
 
 ```.sh
-curl git remote add origin https://github.com/zack-wilson/hcad.git
+git clone https://github.com/zack-wilson/hcad.git
 ```
