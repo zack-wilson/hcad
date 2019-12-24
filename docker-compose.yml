@@ -4,11 +4,10 @@ services:
   dev:
     build: .
     volumes:
-      - ./setup.py:/usr/src/app/setup.py
-      - ./setup.cfg:/usr/src/app/setup.cfg
-      - ./hcad:/usr/src/app/hcad
-      - ./tests:/usr/src/app/tests
+      - .:/usr/src/app
       - dev_data:/usr/src/app/data
-      - dev_logs:/usr/src/app/logs
     working_dir: /usr/src/app
     entrypoint: /bin/bash
+
+volumes:
+  dev_data:
