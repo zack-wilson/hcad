@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
+GLOB=${$1:"*.*"}
+K=${2:-100}
 
-for i in $1; do
-    head -n 1000 "$i" > sample.1000."$(basename "$i")"
+for f_in in $GLOB; do
+    dst=$(dirname "$f_in")/sample."$K".$(basename "$f_in")
+    K_split=$(("$K" / 2))
+    head -n  "$K_split" "$f_in" > "$dst"
+    tail -n "$K_split" "$f_in" >> "$dst"
 done

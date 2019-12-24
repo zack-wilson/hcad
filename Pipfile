@@ -14,9 +14,11 @@ bandit = "*"
 pylint = "*"
 autopep8 = "*"
 ipython = "*"
+coverage = "*"
 
 [packages]
 requests = "*"
+click = "*"
 
 [requires]
 python_version = "3.7"

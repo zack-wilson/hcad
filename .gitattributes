@@ -1,2 +1,10 @@
 tests/samples/*.zip filter=lfs diff=lfs merge=lfs -text
 tests/samples/*.txt filter=lfs diff=lfs merge=lfs -text
+tests/samples/txt/sample.10000.arb_hearings_real.txt.gz filter=lfs diff=lfs merge=lfs -text
+tests/samples/txt/sample.10000.arb_protest_pp.txt.gz filter=lfs diff=lfs merge=lfs -text
+tests/samples/txt/sample.10000.arb_protest_real.txt.gz filter=lfs diff=lfs merge=lfs -text
+tests/samples/txt/sample.10000.arb_hearings_pp.txt.gz filter=lfs diff=lfs merge=lfs -text
+work/samples/csv/arb_protest_pp.csv.gz filter=lfs diff=lfs merge=lfs -text
+work/samples/csv/arb_protest_real.csv.gz filter=lfs diff=lfs merge=lfs -text
+work/samples/csv/arb_hearings_pp.csv.gz filter=lfs diff=lfs merge=lfs -text
+work/samples/csv/arb_hearings_real.csv.gz filter=lfs diff=lfs merge=lfs -text

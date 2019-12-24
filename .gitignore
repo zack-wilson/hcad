@@ -133,3 +133,4 @@ data/
 samples/**
 metastore_db/
 spark-warehouse/
+work/samples/**

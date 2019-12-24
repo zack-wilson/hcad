@@ -46,6 +46,7 @@ def run(
         log.info("Processing in %s", year)
         print(*etl.stage(*etl.land(*years)))
 
+
 def main():
     parser = argparse.ArgumentParser(prog="hcad")
     parser.add_argument(

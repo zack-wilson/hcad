@@ -1,8 +1,11 @@
 import csv
+import gzip
 import io
 import json
 import logging
+import os
 import re
+import shelve
 import shutil
 import subprocess
 import tempfile
@@ -13,20 +16,29 @@ from pathlib import Path
 from typing import Iterator, List, Optional, TextIO, Tuple, Union
 from urllib.parse import urljoin, urlsplit
 
+import requests
+
 log = logging.getLogger(__name__)
 
-tax_year = dt.now().strftime("%Y")
+cache = shelve.open(".cache")
 db = Path("data/hcad/")
+context = dict(
+    tax_year=dt.now().strftime("%Y"),
+    db=Path("data/hcad/"),
+    landing=db.joinpath("landing"),
+    staging=db.joinpath("staging"),
+)
+
+tax_year = dt.now().strftime("%Y")
 landing = db.joinpath("landing")
 staging = db.joinpath("staging")
 
-dictionary = re.findall(
-    r"(\w+)\s+(\w+)\s+(\d+)\s?",
-    db.joinpath("Desc")
-    .joinpath(tax_year)
-    .joinpath("Layout_and_Length.txt")
-    .read_text(),
-)
+if not cache.get("DICTIONARY"):
+    cache["DICTIONARY"] = requests.get(
+        "https://pdata.hcad.org/Desc/Layout_and_Length.txt"
+    )
+
+dictionary = re.findall(r"(\w+)\s+(\w+)\s+(\d+)\s?", cache["DICTIONARY"].text)
 
 
 def get_fields(table: str) -> List[str]:
@@ -41,9 +53,9 @@ def get_field_size_limit(table: str) -> int:
     return max(int(i[-1]) for i in dictionary if i[0] in table)
 
 
-def process_zip(*files: Path) -> Iterator[Path]:
+def decompress_zip(*files: Union[str, Path]) -> Iterator[Path]:
     tmp = Path(tempfile.mkdtemp())
-    for file in files:
+    for file in map(Path, files):
         dst = tmp.joinpath(file.parent.name).joinpath(file.stem)
         dst.mkdir(parents=True, exist_ok=True)
         log.info("Processing %s" % file)
@@ -55,8 +67,29 @@ def process_zip(*files: Path) -> Iterator[Path]:
         log.info("Processed %s" % file)
 
 
-def process_txt(*files: Path) -> Iterator[Path]:
-    for file in files:
+def compress_csv(*files: Union[Path, str]) -> Iterator[Path]:
+    for file in map(Path, files):
+        with file.open("rb") as fin:
+            log.info("Compressing %s", fin)
+            dst = file.with_suffix(f"{file.suffix}.gz")
+            with gzip.open(dst, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
+                log.info("Compressed %s", fout)
+                yield dst
+        file.unlink()
+
+
+def decompress_gzip(*files: Union[Path, str]) -> Iterator[Path]:
+    for file in map(Path, files):
+        tmp = Path(tempfile.mkdtemp())
+        dst = tmp.joinpath(file.stem).with_suffix(".txt")
+        with gzip.open(file) as f:
+            dst.write_bytes(f.read())
+            yield dst
+
+
+def process_txt(*files: Union[Path, str]) -> Iterator[Path]:
+    for file in map(Path, files):
         dst = (
             staging.joinpath(file.parent.parent.name)
             .joinpath(file.parent.name)
@@ -91,4 +124,4 @@ def land(year: Optional[str] = None) -> Iterator[Path]:
 
 
 def stage(*landed) -> Iterator[Path]:
-    yield from process_txt(*process_zip(*landed))
+    yield from compress_csv(*process_txt(*decompress_zip(*landed)))
