@@ -16,3 +16,9 @@ Extract, transform and load (save) Harris County Appraisal District public data 
 ```.sh
 git clone https://github.com/zack-wilson/hcad.git
 ```
+
+## Usage
+
+```
+python -m hcad
+```

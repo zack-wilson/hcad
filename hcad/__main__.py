@@ -1,23 +1,16 @@
 import argparse
-import csv
 import logging
-import os
-import re
-import subprocess
-import tempfile
-from collections import OrderedDict
 from configparser import ConfigParser
 from datetime import datetime as dt
 from pathlib import Path
-from typing import Generator, Iterator, List, Optional, Tuple
-from zipfile import ZipFile
+from typing import Optional
 
 import hcad
 from hcad import etl
 
 log = logging.getLogger(__name__)
-logfmt = "%(asctime)s:%(module)s:%(funcName)s: %(message)s"
-logging.basicConfig(level=logging.INFO, format=logfmt)
+log_fmt = "%(asctime)s:%(levelname)s:%(module)s:%(funcName)s: %(message)s"
+logging.basicConfig(level=logging.INFO, format=log_fmt)
 
 db = Path("data/hcad/")
 
@@ -32,11 +25,7 @@ config = ConfigParser(
 
 
 def run(
-    *years: str,
-    archive: str,
-    landing: Path,
-    staging: Path,
-    debug: Optional[bool] = None,
+    *years: str, landing: Path, staging: Path, debug: Optional[bool] = None,
 ) -> None:
     if debug:
         log.setLevel(logging.DEBUG)
@@ -69,7 +58,6 @@ def main():
     args = parser.parse_args()
     run(
         *args.year,
-        archive=args.archive,
         landing=args.landing,
         staging=args.staging,
         debug=args.debug,

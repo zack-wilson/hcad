@@ -2,7 +2,7 @@ FROM continuumio/miniconda3 as base
 
 ENV PYTHONUNBUFFERRED=1
 
-RUN apt-get update -y && apt-get install \
+RUN apt-get update -y && apt-get install -y \
 	wget \
 	tar \
 	tree
@@ -10,4 +10,6 @@ RUN apt-get update -y && apt-get install \
 WORKDIR /usr/src/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./hcad .
+COPY setup.cfg .
+COPY setup.py .
+COPY ./hcad /usr/src/app/hcad

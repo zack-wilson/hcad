@@ -136,3 +136,4 @@ spark-warehouse/
 work/samples/**
 
 *.db
+/.runtime_info0
