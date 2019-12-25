@@ -3,8 +3,7 @@ import logging
 from configparser import ConfigParser
 from datetime import datetime as dt
 
-
-from hcad import settings, __version__
+from hcad import __version__, settings
 from hcad.etl import run
 
 logging.basicConfig(level=logging.INFO, format=settings.log_fmt)
