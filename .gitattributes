@@ -8,3 +8,4 @@ work/samples/csv/arb_protest_pp.csv.gz filter=lfs diff=lfs merge=lfs -text
 work/samples/csv/arb_protest_real.csv.gz filter=lfs diff=lfs merge=lfs -text
 work/samples/csv/arb_hearings_pp.csv.gz filter=lfs diff=lfs merge=lfs -text
 work/samples/csv/arb_hearings_real.csv.gz filter=lfs diff=lfs merge=lfs -text
+tests/samples/sample.zip filter=lfs diff=lfs merge=lfs -text
