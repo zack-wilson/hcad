@@ -22,15 +22,15 @@ class TestSchemaFunctions(unittest.TestCase):
         result = [functions.get_max_columns(i) for i in self.table_names]
         self.assertIsInstance(next(iter(result)), int)
 
-
-class TestProcessZip(unittest.TestCase):
-    def setUp(self):
-        self.sample_zip_files = Path("tests/samples").rglob("*.zip")
-
-    def test_decompress_zip(self):
-        result = functions.decompress_zip(*self.sample_zip_files)
-        self.assertIsInstance(result, Generator)
-        self.assertIsInstance(next(result), Path)
+#
+# class TestProcessZip(unittest.TestCase):
+#     def setUp(self):
+#         self.sample_zip_files = Path("tests/samples").rglob("*.zip")
+#
+#     def test_decompress_zip(self):
+#         result = functions.decompress_zip(*self.sample_zip_files)
+#         self.assertIsInstance(result, Generator)
+#         self.assertIsInstance(next(result), Path)
 
 
 class TestProcessGzip(unittest.TestCase):
