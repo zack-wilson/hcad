@@ -2,10 +2,10 @@ import unittest
 from pathlib import Path
 from typing import Generator
 
-from hcad import etl, functions
+from hcad import functions
 
 
-class TestFunctions(unittest.TestCase):
+class TestSchemaFunctions(unittest.TestCase):
     def setUp(self):
         self.table_names = set(i[0] for i in functions.dictionary)
 
@@ -28,7 +28,7 @@ class TestProcessZip(unittest.TestCase):
         self.sample_zip_files = Path("tests/samples").rglob("*.zip")
 
     def test_decompress_zip(self):
-        result = etl.decompress_zip(*self.sample_zip_files)
+        result = functions.decompress_zip(*self.sample_zip_files)
         self.assertIsInstance(result, Generator)
         self.assertIsInstance(next(result), Path)
 
@@ -38,7 +38,7 @@ class TestProcessGzip(unittest.TestCase):
         self.files = Path("tests/samples").rglob("*.gz")
 
     def test_decompress_gzip(self):
-        result = etl.decompress_gzip(*self.files)
+        result = functions.decompress_gzip(*self.files)
         self.assertTrue(result)
 
 
@@ -48,7 +48,7 @@ class TestProcessTxt(unittest.TestCase):
 
     def test_process_txt(self):
 
-        result = etl.process_txt(*self.sample_text_files)
+        result = functions.process_txt(*self.sample_text_files)
         self.assertIsInstance(result, Generator)
 
 

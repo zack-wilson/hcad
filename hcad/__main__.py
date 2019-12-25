@@ -2,45 +2,25 @@ import argparse
 import logging
 from configparser import ConfigParser
 from datetime import datetime as dt
-from pathlib import Path
-from typing import Optional
 
-import hcad
-from hcad import etl
 
-log = logging.getLogger(__name__)
-log_fmt = "%(asctime)s:%(levelname)s:%(module)s:%(funcName)s: %(message)s"
-logging.basicConfig(level=logging.INFO, format=log_fmt)
+from hcad import settings, __version__
+from hcad.etl import run
 
-db = Path("data/hcad/")
-
+logging.basicConfig(level=logging.INFO, format=settings.log_fmt)
 
 config = ConfigParser(
     dict(
         tax_year=dt.now().strftime("%Y"),
-        landing=db.joinpath("landing").as_posix(),
-        staging=db.joinpath("staging").as_posix(),
+        landing=settings.db.joinpath("landing").as_posix(),
+        staging=settings.db.joinpath("staging").as_posix(),
     )
 )
 
 
-def run(
-    *years: str, landing: Path, staging: Path, debug: Optional[bool] = None,
-) -> None:
-    if debug:
-        log.setLevel(logging.DEBUG)
-    log.info("Running")
-    log.debug("landing=%s,staging=%s", landing, staging)
-    for year in years:
-        log.info("Processing in %s", year)
-        print(*etl.stage(*etl.land(*years)))
-
-
 def main():
     parser = argparse.ArgumentParser(prog="hcad")
-    parser.add_argument(
-        "--version", action="version", version=hcad.__version__
-    )
+    parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--debug", action="store_true")
     parser.add_argument(
         "year",

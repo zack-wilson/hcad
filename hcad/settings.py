@@ -7,3 +7,4 @@ db = Path("data/hcad/")
 tax_year = dt.now().strftime("%Y")
 landing = db.joinpath("landing")
 staging = db.joinpath("staging")
+log_fmt = "%(asctime)s:%(levelname)s:%(module)s:%(funcName)s: %(message)s"

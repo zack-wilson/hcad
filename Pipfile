@@ -15,6 +15,7 @@ pylint = "*"
 autopep8 = "*"
 ipython = "*"
 coverage = "*"
+tox-venv = "*"
 
 [packages]
 requests = "*"

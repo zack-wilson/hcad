@@ -10,6 +10,9 @@ RUN apt-get update -y && apt-get install -y \
 WORKDIR /usr/src/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./bin ./bin
+COPY ./hcad ./hcad
+COPY ./tests ./tests
 COPY setup.cfg .
 COPY setup.py .
-COPY ./hcad /usr/src/app/hcad
